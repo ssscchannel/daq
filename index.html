@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <title>晟自然玩科學　考古題檢索中心</title>
+    
+    <style>
+        /* =========================================
+           1. 核心架構：App Shell
+           ========================================= */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-image: url('page.jpg'); 
+            background-size: cover;
+            background-position: center;
+            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
+            color: #333;
+        }
+
+        .app-layout-wrapper {
+            width: 100%;
+            max-width: 600px; 
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: transparent;
+        }
+
+        /* =========================================
+           2. 頂部：標題列
+           ========================================= */
+        .main-header {
+            flex: 0 0 60px;
+            width: 100%;
+            background: linear-gradient(90deg, #1a2a6c, #b21f1f, #fdbb2d);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            box-sizing: border-box;
+            color: white;
+        }
+
+        .logo-area {
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 50%;
+            margin-right: 15px;
+            background-image: url('logo.jpg');
+            background-size: cover;
+            border: 2px solid #00d2ff;
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            font-size: 1.0rem;
+            font-weight: bold;
+            line-height: 1.2;          
+            flex: 1;                   
+        }
+
+        .line-btn {
+            background-color: #00B900;
+            color: white;
+            text-decoration: none;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        /* =========================================
+           3. 中間：內容區 (強制顯示滾動條防跳動)
+           ========================================= */
+        .content-scroll-area {
+            flex: 1 1 auto;
+            overflow-y: scroll; 
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* =========================================
+           4. 底部：常駐數據欄
+           ========================================= */
+        .main-footer {
+            flex: 0 0 45px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            border-top: 1px solid rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between; 
+            padding: 0 15px; /* 從 20px 縮小到 15px */
+            font-size: 0.85rem;
+            color: #555;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+            box-sizing: border-box; 
+        }
+
+        .stat-item {
+            white-space: nowrap; 
+        }
+
+        .stat-item b {
+            color: #b21f1f;
+            font-size: 1rem;
+            font-variant-numeric: tabular-nums; 
+            display: inline-block;
+        }
+
+        #total-downloads {
+            min-width: 7ch; /* 稍微縮小預留空間，足夠放 7 位數 */
+            text-align: right;
+        }
+
+        .stat-item b { color: #b21f1f; }
+
+        /* =========================================
+           5. UI 元件規範
+           ========================================= */
+        .ui-card {
+            width: 96% !important;
+            box-sizing: border-box;
+            margin: 15px auto 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 12px;
+        }
+
+        /* 2+2 排版樣式 */
+        .filter-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .filter-row:last-child { margin-bottom: 0; }
+
+        .filter-row .filter-select, 
+        .filter-row .search-input {
+            flex: 1;
+            min-width: 0; 
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            outline: none;
+            background-color: white;
+            font-family: inherit;
+        }
+
+        .simulation-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px;
+            padding-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-layout-wrapper">
+        
+        <header class="main-header">
+            <a href="index.html" class="logo-area" title="返回大廳"></a>
+            <div class="header-title">晟自然玩科學<br>考古題檢索中心</div>
+            <a href="https://line.me/ti/g2/TTCqPpZP6lQqX1z_AUDPNm4977Dvylew3O7oBg" target="_blank" class="line-btn">
+                加 LINE 討論
+            </a>
+        </header>
+
+        <main class="content-scroll-area">
+            <div class="ui-card" id="settings-panel">
+                <div class="filter-row">
+                    <select id="filter-grade" class="filter-select"><option value="all">年級</option></select>
+                    <input type="text" id="search-school" class="search-input" placeholder="🔍 搜尋校名...">
+                </div>
+                <div class="filter-row">
+                    <select id="filter-subject" class="filter-select"><option value="all">科目/版本</option></select>
+                    <select id="filter-examType" class="filter-select"><option value="all">考別</option></select>
+                </div>
+            </div>
+            <div class="simulation-container" id="sim-container"></div>
+        </main>
+
+        <footer class="main-footer">
+            <div class="stat-item">目前收錄：<b id="total-exams">0</b> 份</div>
+            <div class="stat-item">累積下載：<b id="total-downloads">載入中...</b> 次</div>
+        </footer>
+
+    </div>
+
+    <script>
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #result-list { width: 100%; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+        .result-item { 
+            width: 96% !important; 
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.95); 
+            border-radius: 12px; 
+            padding: 15px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+        }
+        .result-header { display: flex; flex-direction: column; gap: 4px; flex: 1; padding-right: 10px; min-width: 0; }
+        
+        /* 標題：僅保留年度與校名，防止手機端長文字截斷 */
+        .result-title { font-size: 1.05rem; font-weight: bold; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* 副標題：整合年級、科目與原本在第一行的考別文字 */
+        .result-subtitle { font-size: 0.85rem; color: #7f8c8d; line-height: 1.4; }
+        
+        .result-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .action-btn { padding: 8px 12px; font-size: 1.2rem; border-radius: 8px; line-height: 1; text-decoration: none; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: transform 0.1s; }
+        .action-btn:active { transform: scale(0.95); }
+        .btn-q { background-color: #3498db; }
+        .btn-a { background-color: #2ecc71; }
+        .btn-disabled { background-color: #bdc3c7; pointer-events: none; opacity: 0.5; box-shadow: none; }
+        .loading-text { width: 96%; text-align: center; color: #7f8c8d; padding: 20px; font-weight: bold; background: white; border-radius: 12px; box-sizing: border-box; }
+    `;
+    document.head.appendChild(style);
+
+    const GOOGLE_SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT48aZ6tWlEumQGyIfPMJ3RTtu_P1dkavcoVQ8HrGuIPNpoZQ0oscZ7x1ZarqZuUd9XFTSZ23g9AYYp/pub?output=csv'; 
+    // 1. 貼上您剛剛複製的 GAS 網址
+    const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwHbI8vmkUXOKIDbQby3ETMf5opkuQn7RZ9779fW3sZ-hltAbj2hqmqoDm6KJY0g5NC/exec';
+
+    // 2. 在 fetchAndParseData 函數中讀取初始次數
+    async function fetchDownloadCount() {
+        try {
+            const response = await fetch(GAS_API_URL);
+            const count = await response.text();
+            document.getElementById('total-downloads').textContent = parseInt(count).toLocaleString();
+        } catch (e) { console.error('無法讀取下載次數'); }
+    }
+
+    // 3. 建立一個觸發點擊增加次數的函數
+    async function recordDownload() {
+        try {
+            // 發送 add 指令給 GAS
+            const response = await fetch(GAS_API_URL + '?action=add');
+            const count = await response.text();
+            document.getElementById('total-downloads').textContent = parseInt(count).toLocaleString();
+        } catch (e) { console.error('無法更新下載次數'); }
+    }
+    
+    const DICT_GRADE = { 'g7': '國一', 'g8': '國二', 'g9': '國三' , 'g3': '小三' , 'g4': '小四' , 'g5': '小五' , 'g6': '小六' };
+    const DICT_SUBJECT = { 'bio': '生物', 'sci': '理化', 'geo': '地科' , 'sg': '理化(含地科)' , 'esh': '國小翰林' , 'esk': '國小康軒' , 'esn': '國小南一', 'all': '通用版' };
+    const DICT_EXAM = { '1e1': '上學期 一段 (國小期中)', '1e2': '上學期 二段 (國小期末)', '1e3': '上學期 三段', '2e1': '下學期 一段 (國小期中)', '2e2': '下學期 二段 (國小期末)', '2e3': '下學期 三段', 'ssscc': '晟製' };
+    
+    let database = {}, examsArray = []; 
+
+    async function fetchAndParseData() {
+        try {
+            const response = await fetch(GOOGLE_SHEETS_CSV_URL);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const csvText = await response.text();
+            parseCSV(csvText);
+        } catch (error) {
+            document.getElementById('sim-container').innerHTML = '<div class="loading-text">無法連線至雲端資料庫。</div>';
+        }
+    }
+
+    function parseCSV(csvText) {
+        const rows = csvText.split('\n');
+        database = {}; 
+        for(let i = 1; i < rows.length; i++) {
+            const row = rows[i].trim();
+            if(!row) continue;
+            const cols = row.split(',');
+            if (cols.length >= 7 && cols[0].trim()) {
+                const grade = cols[0].trim().toLowerCase();
+                const subject = cols[1].trim().toLowerCase();
+                const year = parseInt(cols[2].trim(), 10);
+                const examType = cols[3].trim().toLowerCase();
+                const school = cols[4].trim();
+                const docType = cols[5].trim().toUpperCase();
+                const url = cols[6].trim();
+                
+                const baseKey = `${grade}_${subject}_${year}_${examType}_${school}`;
+                if (!database[baseKey]) {
+                    database[baseKey] = { id: baseKey, grade, subject, year, examType, school, qUrl: null, aUrl: null };
+                }
+                if (docType === 'Q' || docType === 'Q.PDF') database[baseKey].qUrl = url;
+                if (docType === 'A' || docType === 'A.PDF') database[baseKey].aUrl = url;
+            }
+        }
+        examsArray = Object.values(database);
+        document.getElementById('total-exams').textContent = examsArray.length.toLocaleString();
+        initDropdowns();
+        renderList();
+    }
+
+    function initDropdowns() {
+        const gradeSet = new Set();
+        examsArray.forEach(e => gradeSet.add(e.grade));
+        fillSelect('filter-grade', gradeSet, DICT_GRADE, 'all');
+        updateCascadingDropdowns('init');
+    }
+
+    function updateCascadingDropdowns(triggerId) {
+        const gf = document.getElementById('filter-grade').value;
+        const sf = document.getElementById('filter-subject').value;
+        const ef = document.getElementById('filter-examType').value;
+        let validSubjects = new Set();
+        let validExams = new Set();
+        examsArray.forEach(e => {
+            if (gf === 'all' || e.grade === gf) {
+                validSubjects.add(e.subject);
+                if (sf === 'all' || e.subject === sf) validExams.add(e.examType);
+            }
+        });
+        if (triggerId === 'filter-grade' || triggerId === 'init') fillSelect('filter-subject', validSubjects, DICT_SUBJECT, sf);
+        if (triggerId === 'filter-grade' || triggerId === 'filter-subject' || triggerId === 'init') fillSelect('filter-examType', validExams, DICT_EXAM, ef);
+    }
+
+    function fillSelect(id, set, dict, currentValue) {
+        const select = document.getElementById(id);
+        const firstOptHTML = select.options[0].outerHTML; 
+        select.innerHTML = firstOptHTML; 
+        let valueStillValid = false;
+        Array.from(set).sort().forEach(val => {
+            const opt = document.createElement('option');
+            opt.value = val; 
+            opt.textContent = dict[val] || val.toUpperCase();
+            select.appendChild(opt);
+            if(val === currentValue) valueStillValid = true;
+        });
+        select.value = valueStillValid ? currentValue : 'all';
+        select.disabled = (set.size === 0);
+    }
+
+    function renderList() {
+        const gf = document.getElementById('filter-grade').value;
+        const sf = document.getElementById('filter-subject').value;
+        const ef = document.getElementById('filter-examType').value;
+        const sk = document.getElementById('search-school').value.trim().toLowerCase();
+        
+        let filtered = examsArray.filter(e => 
+            (gf === 'all' || e.grade === gf) && 
+            (sf === 'all' || e.subject === sf) && 
+            (ef === 'all' || e.examType === ef) &&
+            (e.school.toLowerCase().includes(sk))
+        );
+        
+        filtered.sort((a, b) => b.year !== a.year ? b.year - a.year : a.school.localeCompare(b.school, 'zh-TW'));
+
+        const container = document.getElementById('sim-container');
+        container.innerHTML = '<div id="result-list"></div>';
+        const list = document.getElementById('result-list');
+
+        if (filtered.length === 0) { list.innerHTML = '<div class="loading-text">目前無符合條件之試卷</div>'; return; }
+
+        filtered.forEach(e => {
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            const qBtn = e.qUrl ? `<a href="${e.qUrl}" target="_blank" onclick="recordDownload()" class="action-btn btn-q" title="下載題目">📥</a>` : `<span class="action-btn btn-disabled">📥</span>`;
+            const aBtn = e.aUrl ? `<a href="${e.aUrl}" target="_blank" onclick="recordDownload()" class="action-btn btn-a" title="下載解答">📝</a>` : `<span class="action-btn btn-disabled">📝</span>`;
+            
+            // 標題顯示：學年度 + 學校
+            // 副標題顯示：年級 + 科目版本 + 考別
+            item.innerHTML = `
+                <div class="result-header">
+                    <div class="result-title">📝 ${e.year}學年度 | ${e.school}</div>
+                    <div class="result-subtitle">
+                        ${DICT_GRADE[e.grade] || e.grade.toUpperCase()} ${DICT_SUBJECT[e.subject] || e.subject.toUpperCase()} | ${DICT_EXAM[e.examType] || e.examType.toUpperCase()}
+                    </div>
+                </div>
+                <div class="result-actions">${qBtn}${aBtn}</div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    setTimeout(() => {
+        document.getElementById('filter-grade').addEventListener('change', (e) => { updateCascadingDropdowns(e.target.id); renderList(); });
+        document.getElementById('filter-subject').addEventListener('change', (e) => { updateCascadingDropdowns(e.target.id); renderList(); });
+        document.getElementById('filter-examType').addEventListener('change', renderList); 
+        document.getElementById('search-school').addEventListener('input', renderList);
+        fetchDownloadCount();
+        fetchAndParseData();
+    }, 100); 
+
+    </script>
+</body>
+</html>
