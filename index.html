@@ -133,6 +133,12 @@
 
         .stat-item b { color: #b21f1f; }
 
+        #settings-panel {
+            position: sticky;
+            top: 15px;
+            z-index: 90;
+        }
+
         /* =========================================
            5. UI 元件規範
            ========================================= */
@@ -257,13 +263,32 @@
     }
 
     // 3. 建立一個觸發點擊增加次數的函數
-    async function recordDownload() {
+    let isDownloading = false;
+
+    async function recordDownload(examId) {
+        if (isDownloading) return;
+    
+        const downloadedExams = JSON.parse(localStorage.getItem('downloadedExams') || '[]');
+        if (downloadedExams.includes(examId)) {
+            return; 
+        }
+
+        isDownloading = true;
+
         try {
-            // 發送 add 指令給 GAS
             const response = await fetch(GAS_API_URL + '?action=add');
             const count = await response.text();
             document.getElementById('total-downloads').textContent = parseInt(count).toLocaleString();
-        } catch (e) { console.error('無法更新下載次數'); }
+        
+            downloadedExams.push(examId);
+            localStorage.setItem('downloadedExams', JSON.stringify(downloadedExams));
+        } catch (e) { 
+            console.error('無法更新下載次數'); 
+        } finally {
+            setTimeout(() => {
+                isDownloading = false;
+            }, 3000);
+        }
     }
     
     const DICT_GRADE = { 'g7': '國一', 'g8': '國二', 'g9': '國三' , 'g3': '小三' , 'g4': '小四' , 'g5': '小五' , 'g6': '小六' };
@@ -376,8 +401,8 @@
         filtered.forEach(e => {
             const item = document.createElement('div');
             item.className = 'result-item';
-            const qBtn = e.qUrl ? `<a href="${e.qUrl}" target="_blank" onclick="recordDownload()" class="action-btn btn-q" title="下載題目">📥</a>` : `<span class="action-btn btn-disabled">📥</span>`;
-            const aBtn = e.aUrl ? `<a href="${e.aUrl}" target="_blank" onclick="recordDownload()" class="action-btn btn-a" title="下載解答">📝</a>` : `<span class="action-btn btn-disabled">📝</span>`;
+            const qBtn = e.qUrl ? `<a href="${e.qUrl}" target="_blank" onclick="recordDownload('${e.id}')" class="action-btn btn-q" title="下載題目">📥</a>` : `<span class="action-btn btn-disabled">📥</span>`;
+            const aBtn = e.aUrl ? `<a href="${e.aUrl}" target="_blank" onclick="recordDownload('${e.id}')" class="action-btn btn-a" title="下載解答">📝</a>` : `<span class="action-btn btn-disabled">📝</span>`;
             
             // 標題顯示：學年度 + 學校
             // 副標題顯示：年級 + 科目版本 + 考別
