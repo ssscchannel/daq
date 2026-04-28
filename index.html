@@ -133,12 +133,6 @@
 
         .stat-item b { color: #b21f1f; }
 
-        #settings-panel {
-            position: sticky;
-            top: 15px;
-            z-index: 90;
-        }
-
         /* =========================================
            5. UI 元件規範
            ========================================= */
@@ -181,6 +175,18 @@
             margin-top: 15px;
             padding-bottom: 30px;
         }
+        /* 鎖定狀態的按鈕樣式 */
+        .locked-btn {
+            opacity: 0.4 !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important; /* 物理性禁止點擊 */
+        }
+
+        #settings-panel {
+           position: sticky;
+            top: 15px;
+            z-index: 90;
+        }
     </style>
 </head>
 <body>
@@ -190,9 +196,9 @@
         <header class="main-header">
             <a href="index.html" class="logo-area" title="返回大廳"></a>
             <div class="header-title">晟自然玩科學<br>考古題檢索中心</div>
-            <a href="https://line.me/ti/g2/TTCqPpZP6lQqX1z_AUDPNm4977Dvylew3O7oBg" target="_blank" class="line-btn">
-                加 LINE 討論
-            </a>
+            <button id="login-nav-btn" onclick="showLoginModal()" style="background-color: #f39c12; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                🔒 登入驗證
+            </button>
         </header>
 
         <main class="content-scroll-area">
@@ -213,6 +219,18 @@
             <div class="stat-item">目前收錄：<b id="total-exams">0</b> 份</div>
             <div class="stat-item">累積下載：<b id="total-downloads">載入中...</b> 次</div>
         </footer>
+
+        <div id="login-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:999; justify-content:center; align-items:center;">
+            <div style="background:white; padding:30px; border-radius:10px; text-align:center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <h3 style="margin-top:0; color:#333;">請輸入專屬驗證碼</h3>
+                <p style="font-size:14px; color:#666; margin-bottom:20px;">驗證後即可解鎖下載功能</p>
+                <input type="text" id="verify-code-input" placeholder="輸入代碼" style="padding:10px; width:80%; font-size:16px; border:1px solid #ccc; border-radius:5px; text-align:center;">
+                <br><br>
+                <button onclick="verifyCode()" style="background:#007bff; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-right:10px;">確認</button>
+                <button onclick="closeLoginModal()" style="background:#ccc; color:#333; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">取消</button>
+                <p id="login-msg" style="color:red; display:none; margin-top:15px; font-weight:bold;">❌ 驗證碼錯誤</p>
+            </div>
+        </div>
 
     </div>
 
@@ -253,6 +271,78 @@
     // 1. 貼上您剛剛複製的 GAS 網址
     const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwHbI8vmkUXOKIDbQby3ETMf5opkuQn7RZ9779fW3sZ-hltAbj2hqmqoDm6KJY0g5NC/exec';
 
+    let isVerified = false;
+
+    function lockAllDownloads() {
+        // 尋找清單中所有 a 標籤 (或加上您特定按鈕的 class 名稱)
+        // 假設您的下載按鈕都有套用 a 標籤
+        const downloadLinks = document.querySelectorAll('.ui-card a'); 
+        downloadLinks.forEach(link => {
+            link.classList.add('locked-btn');
+        });
+    }
+
+    // 2. 顯示與隱藏輸入視窗
+    function showLoginModal() {
+        document.getElementById("login-modal").style.display = "flex";
+    }
+    function closeLoginModal() {
+        document.getElementById("login-modal").style.display = "none";
+        document.getElementById("login-msg").style.display = "none"; // 清除錯誤訊息
+    }
+
+    // 3. 傳送驗證碼給 GAS 進行比對
+    function verifyCode() {
+        const codeInput = document.getElementById("verify-code-input").value.trim();
+        const msgLabel = document.getElementById("login-msg");
+        const navBtn = document.getElementById("login-nav-btn");
+
+        if (!codeInput) return;
+
+        // 狀態切換為驗證中
+        msgLabel.style.display = "none";
+        navBtn.innerText = "⌛ 驗證中...";
+
+        // 發送請求給 GAS
+        fetch(`${GAS_API_URL}?action=verify&code=${codeInput}`, {
+            method: "GET",
+            redirect: "follow"  // 允許瀏覽器跟隨 Google 的內部轉址
+        })    
+            .then(response => response.json())
+            .then(data => {
+                if (data.success === true) {
+                    isVerified = true;
+                    // 驗證成功：解鎖所有按鈕
+                    unlockAllDownloads();
+                    closeLoginModal();
+                
+                    // 改變導覽列按鈕狀態
+                    navBtn.innerText = "✅ 已驗證身分";
+                    navBtn.style.backgroundColor = "#27ae60"; // 變成綠色
+                    navBtn.onclick = null; // 取消點擊功能
+                    navBtn.style.cursor = "default";
+                } else {
+                    // 驗證失敗：顯示錯誤
+                    msgLabel.innerText = "❌ 驗證碼錯誤或不存在";
+                    msgLabel.style.display = "block";
+                    navBtn.innerText = "🔒 登入驗證";
+                }
+            })
+            .catch(error => {
+                msgLabel.innerText = "⚠️ 系統連線異常，請稍後再試";
+                msgLabel.style.display = "block";
+                navBtn.innerText = "🔒 登入驗證";
+            });
+    }
+
+    // 4. 驗證成功後，解除所有按鈕的鎖定
+    function unlockAllDownloads() {
+        const lockedLinks = document.querySelectorAll('.locked-btn');
+        lockedLinks.forEach(link => {
+            link.classList.remove('locked-btn');
+        });
+    }
+    
     // 2. 在 fetchAndParseData 函數中讀取初始次數
     async function fetchDownloadCount() {
         try {
@@ -401,8 +491,9 @@
         filtered.forEach(e => {
             const item = document.createElement('div');
             item.className = 'result-item';
-            const qBtn = e.qUrl ? `<a href="${e.qUrl}" target="_blank" onclick="recordDownload('${e.id}')" class="action-btn btn-q" title="下載題目">📥</a>` : `<span class="action-btn btn-disabled">📥</span>`;
-            const aBtn = e.aUrl ? `<a href="${e.aUrl}" target="_blank" onclick="recordDownload('${e.id}')" class="action-btn btn-a" title="下載解答">📝</a>` : `<span class="action-btn btn-disabled">📝</span>`;
+            const lockedClass = isVerified ? "" : "locked-btn";
+            const qBtn = e.qUrl ? `<a href="${e.qUrl}" target="_blank" onclick="recordDownload('${e.id}')" class="action-btn btn-q ${lockedClass}" title="下載題目">📥</a>` : `<span class="action-btn btn-disabled">📥</span>`;
+            const aBtn = e.aUrl ? `<a href="${e.aUrl}" target="_blank" onclick="recordDownload('${e.id}')" class="action-btn btn-a ${lockedClass}" title="下載解答">📝</a>` : `<span class="action-btn btn-disabled">📝</span>`;
             
             // 標題顯示：學年度 + 學校
             // 副標題顯示：年級 + 科目版本 + 考別
