@@ -293,7 +293,7 @@
 
     // 3. 傳送驗證碼給 GAS 進行比對
     function verifyCode() {
-        const codeInput = document.getElementById("verify-code-input").value.trim();
+        const codeInput = document.getElementById("verify-code-input").value.trim().toUpperCase();
         const msgLabel = document.getElementById("login-msg");
         const navBtn = document.getElementById("login-nav-btn");
 
@@ -304,7 +304,7 @@
         navBtn.innerText = "⌛ 驗證中...";
 
         // 發送請求給 GAS
-        fetch(`${GAS_API_URL}?action=verify&code=${codeInput}`, {
+        fetch(`${GAS_API_URL}?action=verify&code=${encodeURIComponent(codeInput)}`, {
             method: "GET",
             redirect: "follow"  // 允許瀏覽器跟隨 Google 的內部轉址
         })    
