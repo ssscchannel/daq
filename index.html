@@ -304,13 +304,13 @@
         navBtn.innerText = "⌛ 驗證中...";
 
         // 發送請求給 GAS
-        fetch(`${GAS_API_URL}?action=verify&code=${encodeURIComponent(codeInput)}`, {
+        fetch(`${GAS_API_URL}?action=login&token=${encodeURIComponent(codeInput)}`, {
             method: "GET",
             redirect: "follow"  // 允許瀏覽器跟隨 Google 的內部轉址
         })    
             .then(response => response.json())
             .then(data => {
-                if (data.success === true) {
+                if (data.status === "success") {
                     isVerified = true;
                     // 驗證成功：解鎖所有按鈕
                     unlockAllDownloads();
