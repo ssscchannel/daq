@@ -348,7 +348,18 @@
         try {
             const response = await fetch(GAS_API_URL);
             const count = await response.text();
-            document.getElementById('total-downloads').textContent = parseInt(count).toLocaleString();
+            
+            // [新增] 資料儲存節點：將字串轉換為整數並存入變數
+            const parsedCount = parseInt(count);
+            
+            // [新增] 條件判斷：檢驗是否為無效數值 (NaN)
+            if (isNaN(parsedCount)) {
+                // 若為非數值，顯示預設值 0
+                document.getElementById('total-downloads').textContent = '0';
+            } else {
+                // 若為正常數值，則進行千分位格式化
+                document.getElementById('total-downloads').textContent = parsedCount.toLocaleString();
+            }
         } catch (e) { console.error('無法讀取下載次數'); }
     }
 
@@ -368,7 +379,18 @@
         try {
             const response = await fetch(GAS_API_URL + '?action=add');
             const count = await response.text();
-            document.getElementById('total-downloads').textContent = parseInt(count).toLocaleString();
+            
+            // [新增] 資料儲存節點：將字串轉換為整數並存入變數
+            const parsedCount = parseInt(count);
+            
+            // [新增] 條件判斷：檢驗是否為無效數值 (NaN)
+            if (isNaN(parsedCount)) {
+                // 若為非數值，顯示預設值 0
+                document.getElementById('total-downloads').textContent = '0';
+            } else {
+                // 若為正常數值，則進行千分位格式化
+                document.getElementById('total-downloads').textContent = parsedCount.toLocaleString();
+            }
         
             downloadedExams.push(examId);
             localStorage.setItem('downloadedExams', JSON.stringify(downloadedExams));
